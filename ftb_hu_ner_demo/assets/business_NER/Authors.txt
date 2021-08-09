@@ -1,0 +1,31 @@
+Hungarian Named Entity Corpus of Business Newswire Texts 1.0
+
+Authors:
+János Csirik (1), Richárd Farkas (2), András Kocsor (2), György Szarvas (1)
+
+1:
+University of Szeged
+Department of Informatics
+Szeged, Hungary
+
+2:
+András Kocsor
+Hungarian Academy of Science
+Research Group on Artificial Intelligence
+Szeged, Hungary
+
+{csirik, rfarkas, kocsor, szarvas}@inf.u-szeged.hu
+
+
+Annotators:
+Csaba Hatvani (chief annotator)
+University of Szeged
+Department of Informatics
+Szeged, Hungary
+hacso@inf.u-szeged.hu
+
+Annotator 1:
+Veronika Vincze
+
+Annotator 2:
+Éva Nagy
