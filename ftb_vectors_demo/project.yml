@@ -1,0 +1,92 @@
+title: "Demo fasttext-bloom vectors"
+description: "Show how to train fasttext-bloom vectors and load them into a spaCy vectors model."
+# Variables can be referenced across the project.yml using ${vars.var_name}
+vars:
+  name: "ftb_vectors"
+  lang: "en"
+  oscar_dataset: "unshuffled_deduplicated_en"
+  max_texts: 1000
+  # number of processes (tokenization) and threads (fasttext)
+  n_process: 8
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["corpus", "software", "scripts", "vectors"]
+
+# Assets that should be downloaded or available in the directory. We're shipping
+# them with the project, so they won't have to be downloaded.
+assets:
+  - dest: "software/fasttext-bloom"
+    git:
+      repo: "https://github.com/adrianeboyd/fastText/"
+      branch: "feature/bloom"
+      path: ""
+
+## Workflows are sequences of commands (see below) executed in order. You can
+## run them via "spacy project run [workflow]". If a commands's inputs/outputs
+## haven't changed, it won't be re-run.
+workflows:
+  all:
+    - compile-fasttext
+    - download-data
+    - preprocess
+    - train-fasttext
+    - init-ngram-vectors
+
+# Project commands, specified in a style similar to CI config files (e.g. Azure
+# pipelines). The name is the command name that lets you trigger the command
+# via "spacy project run [command] [path]". The help message is optional and
+# shown when executing "spacy project run [optional command] [path] --help".
+commands:
+  - name: "compile-fasttext"
+    help: "Compile fasttext-bloom"
+    script:
+      - "make -C software/fasttext-bloom"
+    outputs:
+      - "software/fasttext-bloom/fasttext-bloom"
+
+  - name: "download-data"
+    help: "Download data from OSCAR dataset"
+    script:
+      - "python scripts/download_oscar_dataset.py ${vars.oscar_dataset} corpus/${vars.oscar_dataset}.${vars.max_texts}.jsonl --max-texts ${vars.max_texts}"
+    deps:
+      - "scripts/download_oscar_dataset.py"
+    outputs:
+      - "corpus/${vars.oscar_dataset}.${vars.max_texts}.jsonl"
+
+  - name: "preprocess"
+    help: "Tokenize and sentencize data"
+    script:
+      - "python scripts/tokenize_dataset.py ${vars.lang} corpus/${vars.oscar_dataset}.${vars.max_texts}.jsonl corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt --n-process=${vars.n_process}"
+    deps:
+      - "scripts/tokenize_dataset.py"
+    outputs:
+      - "corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt"
+
+  - name: "train-fasttext"
+    help: "Train fasttext-bloom vectors"
+    script:
+      - "software/fasttext-bloom/fasttext-bloom cbow -dim 300 -minCount 10 -minn 5 -maxn 6 -neg 10 -hashOnly -hashCount 2 -bucket 20000 -thread ${vars.n_process} -input corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt -output vectors/${vars.oscar_dataset}.${vars.max_texts}.dim300.minCount10.n5-6.neg10.hashOnly.hashCount2.bucket20000"
+    deps:
+      - "corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt"
+    outputs:
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim300.minCount10.n5-6.neg10.hashOnly.hashCount2.bucket20000.hashvec"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim300.minCount10.n5-6.neg10.hashOnly.hashCount2.bucket20000.vec"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim300.minCount10.n5-6.neg10.hashOnly.hashCount2.bucket20000.bin"
+
+  - name: "init-ngram-vectors"
+    help: "Create an ngram vectors model"
+    script:
+      - "python -m spacy init vectors ${vars.lang} vectors/${vars.oscar_dataset}.${vars.max_texts}.dim300.minCount10.n5-6.neg10.hashOnly.hashCount2.bucket20000.hashvec vectors/${vars.oscar_dataset}.${vars.max_texts}_ngram_model --fasttext-bloom-vectors"
+    deps:
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim300.minCount10.n5-6.neg10.hashOnly.hashCount2.bucket20000.hashvec"
+    outputs:
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}_ngram_model"
+
+  - name: "fasttext-nn"
+    help: "Demo fasttext-bloom vectors"
+    script:
+      - "software/fasttext-bloom/fasttext-bloom nn vectors/${vars.oscar_dataset}.${vars.max_texts}.dim300.minCount10.n5-6.neg10.hashOnly.hashCount2.bucket20000.bin"
+    deps:
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim300.minCount10.n5-6.neg10.hashOnly.hashCount2.bucket20000.bin"
+
