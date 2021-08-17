@@ -1,0 +1,183 @@
+title: "Demo fasttext-bloom vectors for UD Korean Kaist"
+description: "Train fasttext-bloom vectors on OSCAR and compare default pruned vectors vs. fasttext-bloom vectors on UD Korean Kaist."
+# Variables can be referenced across the project.yml using ${vars.var_name}
+vars:
+  name: "ftb_ko_ud_demo"
+  lang: "ko"
+  oscar_dataset: "unshuffled_deduplicated_ko"
+  max_texts: 1000000
+  vector_size: 50000
+  vector_dim: 300
+  n_process: 24
+  minn: 2
+  maxn: 3
+  max_steps: 20000
+  treebank: "UD_Korean-Kaist"
+  train_name: "ko_kaist-ud-train"
+  dev_name: "ko_kaist-ud-dev"
+  test_name: "ko_kaist-ud-test"
+  gpu_id: 0
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["assets", "corpus", "training", "metrics", "software", "training", "vectors"]
+
+# Assets that should be downloaded or available in the directory. We're shipping
+# them with the project, so they won't have to be downloaded.
+assets:
+  - dest: "software/fasttext-bloom"
+    git:
+      repo: "https://github.com/adrianeboyd/fastText/"
+      branch: "feature/bloom"
+      path: ""
+  - dest: "assets/${vars.treebank}"
+    git:
+      repo: "https://github.com/UniversalDependencies/${vars.treebank}"
+      branch: "master"
+      path: ""
+
+## Workflows are sequences of commands (see below) executed in order. You can
+## run them via "spacy project run [workflow]". If a commands's inputs/outputs
+## haven't changed, it won't be re-run.
+workflows:
+  all:
+    - compile-fasttext
+    - tokenize-oscar
+    - train-fasttext
+    - init-default-vectors
+    - init-ngram-vectors
+    - convert
+    - train-no-vectors
+    - train-default
+    - train-ngram
+    - evaluate
+
+# Project commands, specified in a style similar to CI config files (e.g. Azure
+# pipelines). The name is the command name that lets you trigger the command
+# via "spacy project run [command] [path]". The help message is optional and
+# shown when executing "spacy project run [optional command] [path] --help".
+commands:
+  - name: "compile-fasttext"
+    help: "Compile fasttext-bloom"
+    script:
+      - "make -C software/fasttext-bloom"
+    # this doesn't really work, the no_skip bug fix is needed
+    outputs:
+      - "software/fasttext-bloom/fasttext-bloom"
+    no_skip: true
+
+  - name: "tokenize-oscar"
+    help: "Download, tokenize, and sentencize data"
+    script:
+      - "python scripts/tokenize_dataset.py ${vars.lang} ${vars.oscar_dataset} ${vars.max_texts} corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt --n-process=${vars.n_process}"
+    deps:
+      - "scripts/tokenize_dataset.py"
+    outputs:
+      - "corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt"
+
+  - name: "train-fasttext"
+    help: "Train fasttext-bloom vectors"
+    script:
+      - "software/fasttext-bloom/fasttext-bloom cbow -dim ${vars.vector_dim} -minCount 20 -minn ${vars.minn} -maxn ${vars.maxn} -neg 10 -hashOnly -hashCount 2 -bucket ${vars.vector_size} -thread ${vars.n_process} -input corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt -output vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount20.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount2.bucket${vars.vector_size}"
+    deps:
+      - "corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt"
+    outputs:
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount20.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount2.bucket${vars.vector_size}.hashvec"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount20.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount2.bucket${vars.vector_size}.vec"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount20.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount2.bucket${vars.vector_size}.bin"
+
+  - name: "fasttext-nn"
+    help: "Demo fasttext-bloom vectors"
+    script:
+      - "software/fasttext-bloom/fasttext-bloom nn vectors/${vars.oscar_dataset}.dim${vars.vector_dim}.minCount20.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount2.bucket${vars.vector_size}.bin"
+    deps:
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount20.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount2.bucket${vars.vector_size}.bin"
+
+  - name: "init-default-vectors"
+    help: "Create a default vectors model"
+    script:
+      - "python -m spacy init vectors xx vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount20.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount2.bucket${vars.vector_size}.vec vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_default_model --prune ${vars.vector_size}"
+    deps:
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount20.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount2.bucket${vars.vector_size}.vec"
+    outputs:
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_default_model"
+
+  - name: "init-ngram-vectors"
+    help: "Create an ngram vectors model"
+    script:
+      - "python -m spacy init vectors xx vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount20.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount2.bucket${vars.vector_size}.hashvec vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_ngram_model --fasttext-bloom-vectors"
+    deps:
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount20.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount2.bucket${vars.vector_size}.hashvec"
+    outputs:
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_ngram_model"
+
+  - name: "convert"
+    help: "Convert the data to spaCy's format"
+    script:
+      - "mkdir -p corpus/${vars.treebank}"
+      - "python -m spacy convert assets/${vars.treebank}/${vars.train_name}.conllu corpus/${vars.treebank}/ --n-sents 10"
+      - "mv corpus/${vars.treebank}/${vars.train_name}.spacy corpus/${vars.treebank}/train.spacy"
+      - "python -m spacy convert assets/${vars.treebank}/${vars.dev_name}.conllu corpus/${vars.treebank}/ --n-sents 10"
+      - "mv corpus/${vars.treebank}/${vars.dev_name}.spacy corpus/${vars.treebank}/dev.spacy"
+      - "python -m spacy convert assets/${vars.treebank}/${vars.test_name}.conllu corpus/${vars.treebank}/ --n-sents 10"
+      - "mv corpus/${vars.treebank}/${vars.test_name}.spacy corpus/${vars.treebank}/test.spacy"
+    deps:
+      - "assets/${vars.treebank}/"
+    outputs:
+      - "corpus/${vars.treebank}/train.spacy"
+      - "corpus/${vars.treebank}/dev.spacy"
+      - "corpus/${vars.treebank}/test.spacy"
+
+  - name: "train-no-vectors"
+    help: "Train the model without vectors"
+    script:
+      - "python -m spacy train configs/config.cfg --output training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-novectors/ --paths.train corpus/${vars.treebank}/train.spacy --paths.dev corpus/${vars.treebank}/dev.spacy --gpu-id ${vars.gpu_id} --initialize.vectors null --components.tok2vec.model.embed.include_static_vectors false --training.max_steps ${vars.max_steps}"
+    deps:
+      - "configs/config.cfg"
+      - "corpus/${vars.treebank}/train.spacy"
+      - "corpus/${vars.treebank}/dev.spacy"
+    outputs:
+      - "training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-novectors/model-best"
+
+  - name: "train-default"
+    help: "Train the model with default vectors"
+    script:
+      - "python -m spacy train configs/config.cfg --output training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-default/ --paths.train corpus/${vars.treebank}/train.spacy --paths.dev corpus/${vars.treebank}/dev.spacy --gpu-id ${vars.gpu_id} --initialize.vectors vectors/${vars.oscar_dataset}.${vars.max_texts}_default_model --training.max_steps ${vars.max_steps}"
+    deps:
+      - "configs/config.cfg"
+      - "corpus/${vars.treebank}/train.spacy"
+      - "corpus/${vars.treebank}/dev.spacy"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_default_model"
+    outputs:
+      - "training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-default/model-best"
+
+  - name: "train-ngram"
+    help: "Train the model with ngram vectors"
+    script:
+      - "python -m spacy train configs/config.cfg --output training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-ngram/ --paths.train corpus/${vars.treebank}/train.spacy --paths.dev corpus/${vars.treebank}/dev.spacy --gpu-id ${vars.gpu_id} --initialize.vectors vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_ngram_model --training.max_steps ${vars.max_steps}"
+    deps:
+      - "configs/config.cfg"
+      - "corpus/${vars.treebank}/train.spacy"
+      - "corpus/${vars.treebank}/dev.spacy"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_ngram_model"
+    outputs:
+      - "training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-ngram/model-best"
+
+  - name: "evaluate"
+    help: "Evaluate the models and export metrics"
+    script:
+      - "mkdir -p metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-novectors"
+      - "python -m spacy evaluate training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-novectors/model-best corpus/${vars.treebank}/test.spacy --output metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-novectors/metrics.json --gpu-id ${vars.gpu_id}"
+      - "mkdir -p metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-default"
+      - "python -m spacy evaluate training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-default/model-best corpus/${vars.treebank}/test.spacy --output metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-default/metrics.json --gpu-id ${vars.gpu_id}"
+      - "mkdir -p metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-ngram"
+      - "python -m spacy evaluate training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-ngram/model-best corpus/${vars.treebank}/test.spacy --output metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-ngram/metrics.json --gpu-id ${vars.gpu_id}"
+    deps:
+      - "corpus/${vars.treebank}/test.spacy"
+      - "training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-novectors/model-best"
+      - "training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-default/model-best"
+      - "training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-ngram/model-best"
+    outputs:
+      - "metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-novectors/metrics.json"
+      - "metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-default/metrics.json"
+      - "metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-ngram/metrics.json"

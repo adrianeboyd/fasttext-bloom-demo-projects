@@ -1,9 +1,8 @@
 ## Demos for fasttext-bloom vectors
 
 > Note: As specified in `requirements.txt`, all demos currently require 
-> a custom version of spaCy from my 
-> [`feature/fasttext-bloom-vectors`](https://github.com/adrianeboyd/spaCy/tree/feature/fasttext-bloom-vectors) 
-> branch.
+> a custom version of spaCy, usually
+> [`feature/fasttext-bloom-vectors`](https://github.com/adrianeboyd/spaCy/tree/feature/fasttext-bloom-vectors).
 
 A demo for training and loading `fasttext-bloom` vectors:
 
@@ -35,6 +34,18 @@ where `fasttext-bloom` vectors are expected to improve the performance:
   | none                   | 93.7 | 93.5 | 93.6 |
   | default (pruned)       | 95.9 | 94.1 | 95.0 |
   | ngram (minn 5, maxn 6) | 96.9 | 96.1 | 96.5 |
+
+* [`ftb_ko_ud_demo`](ftb_ko_ud_demo): agglutinative languages with Korean UD
+
+   With 1M (3.3G) tokenized training texts and 50K 300-dim vectors:
+
+  | Vectors                | TAG  | POS  | DEP UAS | DEP LAS |
+  | ---------------------- | ---: | ---: | ------: | ------: |
+  | none                   | 72.4 | 85.2 | 73.7    | 64.9    |
+  | default (pruned)       | 78.0 | 89.5 | 78.7    | 72.9    |
+  | ngram (minn 1, maxn 3) | 83.6 | 94.4 | 83.2    | 80.3    |
+
+  The ngram model is ~3x slower than the default model.
 
 ### Notes
 
