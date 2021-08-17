@@ -1,0 +1,134 @@
+title: "Evaluate fasttext-bloom vectors with qvec"
+description: "Evaluate fasttext-bloom vectors with qvec"
+# Variables can be referenced across the project.yml using ${vars.var_name}
+vars:
+  name: "ftb_qvec"
+  lang: "da"
+  oscar_dataset: "unshuffled_deduplicated_da"
+  max_texts: 1000000
+  min_count: 50
+  dim: 300
+  minn: 3
+  maxn: 6
+  hash_count: 2
+  bucket: 20000
+  # number of processes (tokenization) and threads (fasttext)
+  n_process: 24
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["corpus", "software", "scripts", "vectors"]
+
+# Assets that should be downloaded or available in the directory. We're shipping
+# them with the project, so they won't have to be downloaded.
+assets:
+  - dest: "software/fasttext-bloom"
+    git:
+      repo: "https://github.com/adrianeboyd/fastText/"
+      branch: "feature/bloom"
+      path: ""
+  - dest: "software/qvec"
+    git:
+      repo: "https://github.com/ytsvetko/qvec"
+      branch: "master"
+      path: ""
+
+## Workflows are sequences of commands (see below) executed in order. You can
+## run them via "spacy project run [workflow]". If a commands's inputs/outputs
+## haven't changed, it won't be re-run.
+workflows:
+  all:
+    - compile-fasttext
+    - tokenize-oscar
+    - train-fasttext-standard
+    - train-fasttext-bloom
+    - init-default-vectors
+    - init-ngram-vectors
+    - export-comparable-vectors
+    - run-qvec
+
+# Project commands, specified in a style similar to CI config files (e.g. Azure
+# pipelines). The name is the command name that lets you trigger the command
+# via "spacy project run [command] [path]". The help message is optional and
+# shown when executing "spacy project run [optional command] [path] --help".
+commands:
+  - name: "compile-fasttext"
+    help: "Compile fasttext-bloom"
+    script:
+      - "make -j ${vars.n_process} -C software/fasttext-bloom"
+    outputs:
+      - "software/fasttext-bloom/fasttext-bloom"
+
+  - name: "tokenize-oscar"
+    help: "Download, tokenize, and sentencize data"
+    script:
+      - "python scripts/tokenize_dataset.py ${vars.lang} ${vars.oscar_dataset} ${vars.max_texts} corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt --n-process=${vars.n_process}"
+    deps:
+      - "scripts/tokenize_dataset.py"
+    outputs:
+      - "corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt"
+
+  - name: "train-fasttext-standard"
+    help: "Train fasttext standard vectors (with ngrams)"
+    script:
+      - "software/fasttext-bloom/fasttext-bloom cbow -dim ${vars.dim} -minCount ${vars.min_count} -minn ${vars.minn} -maxn ${vars.maxn} -neg 10 -thread ${vars.n_process} -input corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt -output vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10"
+    deps:
+      - "corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt"
+    outputs:
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.bin"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.vec"
+
+  - name: "train-fasttext-bloom"
+    help: "Train fasttext-bloom vectors"
+    script:
+      - "software/fasttext-bloom/fasttext-bloom cbow -dim ${vars.dim} -minCount ${vars.min_count} -minn ${vars.minn} -maxn ${vars.maxn} -neg 10 -hashOnly -hashCount ${vars.hash_count} -bucket ${vars.bucket} -thread ${vars.n_process} -input corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt -output vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}"
+    deps:
+      - "corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt"
+    outputs:
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}.bin"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}.vec"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}.hashvec"
+
+  - name: "init-default-vectors"
+    help: "Create an default vectors model"
+    script:
+      - "python -m spacy init vectors ${vars.lang} vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.vec vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.vec_model --prune ${vars.bucket}"
+    deps:
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.vec"
+    outputs:
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.vec_model"
+
+  - name: "init-ngram-vectors"
+    help: "Create an ngram vectors model"
+    script:
+      - "python -m spacy init vectors ${vars.lang} vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}.hashvec vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}.hashvec_model --fasttext-bloom-vectors"
+    deps:
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}.hashvec"
+    outputs:
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}.hashvec_model"
+
+  - name: "export-comparable-vectors"
+    help: "Export comparable vectors for all qvec eval items"
+    script:
+      - "python scripts/export_comparable_vectors.py vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.vec vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.vec_model software/qvec/oracles/semcor_noun_verb.supersenses.${vars.lang} vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.vec.qvec"
+      - "python scripts/export_comparable_vectors.py vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}.vec vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}.hashvec_model software/qvec/oracles/semcor_noun_verb.supersenses.${vars.lang} vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}.vec.qvec"
+    deps:
+      - "scripts/export_comparable_vectors.py"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.vec"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.vec_model"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}.vec"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}.hashvec_model"
+    outputs:
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.vec.qvec"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}.vec.qvec"
+
+  - name: "run-qvec"
+    help: "Run qvec"
+    script:
+      - "python software/qvec/qvec_cca.py --in_vectors vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.vec.qvec --in_oracle software/qvec/oracles/semcor_noun_verb.supersenses.${vars.lang}"
+      - "python software/qvec/qvec_cca.py --in_vectors vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}.vec.qvec --in_oracle software/qvec/oracles/semcor_noun_verb.supersenses.${vars.lang}"
+    deps:
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.vec"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.vec.qvec"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}.vec"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}.vec.qvec"

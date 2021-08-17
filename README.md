@@ -8,6 +8,11 @@ A demo for training and loading `fasttext-bloom` vectors:
 
 * [`ftb_vectors_demo`](ftb_vectors_demo)
 
+A demo for training and comparing standard fasttext and fasttext-bloom vectors
+using [`QVEC`](https://github.com/ytsvetko/qvec):
+
+* [`ftb_qvec`](ftb_qvec)
+
 Demos for training vectors and and spaCy pipelines with a focus on cases 
 where `fasttext-bloom` vectors are expected to improve the performance:
 
