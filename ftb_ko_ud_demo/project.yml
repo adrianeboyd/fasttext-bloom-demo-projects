@@ -8,7 +8,7 @@ vars:
   max_texts: 1000000
   vector_size: 50000
   vector_dim: 300
-  n_process: 24
+  n_process: 32
   minn: 2
   maxn: 3
   max_steps: 20000
@@ -16,7 +16,7 @@ vars:
   train_name: "ko_kaist-ud-train"
   dev_name: "ko_kaist-ud-dev"
   test_name: "ko_kaist-ud-test"
-  gpu_id: 0
+  gpu_id: -1
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
@@ -84,7 +84,6 @@ commands:
       - "corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt"
     outputs:
       - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount20.n${vars.minn}-${vars.maxn}.neg10.vec"
-      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount20.n${vars.minn}-${vars.maxn}.neg10.bin"
 
   - name: "train-fasttext-bloom"
     help: "Train fasttext-bloom vectors"
@@ -95,14 +94,6 @@ commands:
     outputs:
       - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount20.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount2.bucket${vars.vector_size}.hashvec"
       - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount20.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount2.bucket${vars.vector_size}.vec"
-      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount20.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount2.bucket${vars.vector_size}.bin"
-
-  - name: "fasttext-nn"
-    help: "Demo fasttext-bloom vectors"
-    script:
-      - "software/fasttext-bloom/fasttext-bloom nn vectors/${vars.oscar_dataset}.dim${vars.vector_dim}.minCount20.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount2.bucket${vars.vector_size}.bin"
-    deps:
-      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount20.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount2.bucket${vars.vector_size}.bin"
 
   - name: "init-standard-vectors"
     help: "Create a standard vectors model"
@@ -142,13 +133,13 @@ commands:
   - name: "train-no-vectors"
     help: "Train the model without vectors"
     script:
-      - "python -m spacy train configs/config.cfg --output training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-novectors/ --paths.train corpus/${vars.treebank}/train.spacy --paths.dev corpus/${vars.treebank}/dev.spacy --gpu-id ${vars.gpu_id} --initialize.vectors null --components.tok2vec.model.embed.include_static_vectors false --training.max_steps ${vars.max_steps}"
+      - "python -m spacy train configs/config.cfg --output training/${vars.treebank}.${vars.max_texts}-novectors/ --paths.train corpus/${vars.treebank}/train.spacy --paths.dev corpus/${vars.treebank}/dev.spacy --gpu-id ${vars.gpu_id} --initialize.vectors null --components.tok2vec.model.embed.include_static_vectors false --training.max_steps ${vars.max_steps}"
     deps:
       - "configs/config.cfg"
       - "corpus/${vars.treebank}/train.spacy"
       - "corpus/${vars.treebank}/dev.spacy"
     outputs:
-      - "training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-novectors/model-best"
+      - "training/${vars.treebank}.${vars.max_texts}-novectors/model-best"
 
   - name: "train-standard"
     help: "Train the model with standard, pruned vectors"
