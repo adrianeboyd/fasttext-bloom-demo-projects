@@ -1,20 +1,20 @@
 ## Demos for fasttext-bloom vectors
 
-> Note: As specified in `requirements.txt`, all demos currently require 
-> a custom version of spaCy, usually
+> Note: As specified in `requirements.txt`, all demos currently require a
+> custom version of spaCy, usually
 > [`feature/fasttext-bloom-vectors`](https://github.com/adrianeboyd/spaCy/tree/feature/fasttext-bloom-vectors).
 
 A demo for training and loading `fasttext-bloom` vectors:
 
 * [`ftb_vectors_demo`](ftb_vectors_demo)
 
-A demo for training and comparing standard fasttext and fasttext-bloom vectors
-using [`QVEC`](https://github.com/ytsvetko/qvec):
+A demo for training and comparing standard `fasttext` and `fasttext-bloom`
+vectors using [`QVEC`](https://github.com/ytsvetko/qvec):
 
 * [`ftb_qvec`](ftb_qvec)
 
-Demos for training vectors and and spaCy pipelines with a focus on cases 
-where `fasttext-bloom` vectors are expected to improve the performance:
+Demos for training vectors and and spaCy pipelines with a focus on cases where
+`fasttext-bloom` vectors are expected to improve the performance:
 
 * [`ftb_en_noisy_ner_demo`](ftb_en_noisy_ner_demo): noisy 
   data with English NER for Twitter on emerging events
@@ -42,32 +42,30 @@ where `fasttext-bloom` vectors are expected to improve the performance:
 
 * [`ftb_ko_ud_demo`](ftb_ko_ud_demo): agglutinative languages with Korean UD
 
-   With 1M (3.3G) tokenized training texts and 50K 300-dim vectors:
+   With 1M (3.3G) tokenized training texts and 50K 300-dim vectors, ~800K
+   keys for the standard vectors:
 
   | Vectors                | TAG  | POS  | DEP UAS | DEP LAS |
   | ---------------------- | ---: | ---: | ------: | ------: |
-  | none                   | 72.4 | 85.2 | 73.7    | 64.9    |
-  | default (pruned)       | 78.0 | 89.5 | 78.7    | 72.9    |
-  | ngram (minn 1, maxn 3) | 83.6 | 94.4 | 83.2    | 80.3    |
-
-  The ngram model is ~3x slower than the default model.
+  | none                   | 72.6 | 85.0 | 73.3    | 64.6    |
+  | standard (pruned)      | 78.2 | 89.7 | 78.9    | 73.1    |
+  | ngram (minn 2, maxn 3) | 83.2 | 94.2 | 83.4    | 80.7    |
 
 ### Notes
 
-To test a workflow quickly, set `max_texts` to very small value like 
-`100`. A much larger amount of training data for the vectors is 
-obviously needed for more meaningful comparisons in the test cases. The 
-provided defaults are still quite small for typical vector training 
-data, but should show some results and train in a not-too-unreasonable 
-amount of time on a small number of threads.
+To test a workflow quickly, set `max_texts` to very small value like `100`. A
+much larger amount of training data for the vectors is obviously needed for
+more meaningful comparisons in the test cases. The provided defaults are still
+quite small for typical vector training data, but should show some results and
+train in a not-too-unreasonable amount of time on a small number of threads.
 
-For reference, 1M texts from the OSCAR datasets are about 5G for English 
-and 4G for Hungarian. In a real project, the vector training text 
-download and tokenization steps could be combined, but to demonstrate 
-streaming from huggingface's `datasets` more explicitly, the texts are 
-downloaded and tokenized in two separate steps, which doubles the amount 
-of disk space required.
+For reference, 1M texts from the OSCAR datasets are about 5G for English, 4G
+for Hungarian, and 3G for Korean. In a real project, the vector training text
+download and tokenization steps could be combined, but to demonstrate streaming
+from huggingface's `datasets` more explicitly, the texts are downloaded and
+tokenized in two separate steps, which doubles the amount of disk space
+required.
 
-`fasttext` does not support streamed input, so it is necessary to have 
-the tokenized training data saved in a file. Outside of a demo, I'd 
-usually use tmpfs.
+`fasttext` does not support streamed input, so it is necessary to have the
+tokenized training data saved in a file. Outside of a demo, I'd usually use
+tmpfs.
