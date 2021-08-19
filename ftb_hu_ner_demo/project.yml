@@ -6,7 +6,7 @@ vars:
   lang: "hu"
   oscar_dataset: "unshuffled_deduplicated_hu"
   max_texts: 500000
-  vector_size: 20000
+  vector_size: 50000
   vector_dim: 300
   n_process: 8
   treebank: "business_NER"
@@ -36,13 +36,14 @@ workflows:
     - compile-fasttext
     - download-data
     - preprocess
-    - train-fasttext
-    - init-default-vectors
+    - train-fasttext-standard
+    - train-fasttext-bloom
+    - init-standard-vectors
     - init-ngram-vectors
     - create-config
     - convert
     - train-no-vectors
-    - train-default
+    - train-standard
     - train-ngram
     - evaluate
 
@@ -79,7 +80,17 @@ commands:
     outputs:
       - "corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt"
 
-  - name: "train-fasttext"
+  - name: "train-fasttext-standard"
+    help: "Train fasttext standard vectors"
+    script:
+      - "software/fasttext-bloom/fasttext-bloom cbow -dim ${vars.vector_dim} -minCount 10 -minn 5 -maxn 6 -neg 10 -thread ${vars.n_process} -input corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt -output vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount10.n5-6.neg10"
+    deps:
+      - "corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt"
+    outputs:
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount10.n5-6.neg10.vec"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount10.n5-6.neg10.vec"
+
+  - name: "train-fasttext-bloom"
     help: "Train fasttext-bloom vectors"
     script:
       - "software/fasttext-bloom/fasttext-bloom cbow -dim ${vars.vector_dim} -minCount 10 -minn 5 -maxn 6 -neg 10 -hashOnly -hashCount 2 -bucket ${vars.vector_size} -thread ${vars.n_process} -input corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt -output vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount10.n5-6.neg10.hashOnly.hashCount2.bucket${vars.vector_size}"
@@ -90,21 +101,14 @@ commands:
       - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount10.n5-6.neg10.hashOnly.hashCount2.bucket${vars.vector_size}.vec"
       - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount10.n5-6.neg10.hashOnly.hashCount2.bucket${vars.vector_size}.bin"
 
-  - name: "fasttext-nn"
-    help: "Demo fasttext-bloom vectors"
-    script:
-      - "software/fasttext-bloom/fasttext-bloom nn vectors/${vars.oscar_dataset}.dim${vars.vector_dim}.minCount10.n5-6.neg10.hashOnly.hashCount2.bucket${vars.vector_size}.bin"
-    deps:
-      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount10.n5-6.neg10.hashOnly.hashCount2.bucket${vars.vector_size}.bin"
-
-  - name: "init-default-vectors"
+  - name: "init-standard-vectors"
     help: "Create a default vectors model"
     script:
-      - "python -m spacy init vectors ${vars.lang} vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount10.n5-6.neg10.hashOnly.hashCount2.bucket${vars.vector_size}.vec vectors/${vars.oscar_dataset}.${vars.max_texts}_default_model --prune ${vars.vector_size}"
+      - "python -m spacy init vectors ${vars.lang} vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount10.n5-6.neg10.vec vectors/${vars.oscar_dataset}.${vars.max_texts}_standard_model --prune ${vars.vector_size}"
     deps:
-      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount10.n5-6.neg10.hashOnly.hashCount2.bucket${vars.vector_size}.vec"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount10.n5-6.neg10.vec"
     outputs:
-      - "vectors/${vars.oscar_dataset}.${vars.max_texts}_default_model"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}_standard_model"
 
   - name: "init-ngram-vectors"
     help: "Create an ngram vectors model"
@@ -141,25 +145,25 @@ commands:
   - name: "train-no-vectors"
     help: "Train the model without vectors"
     script:
-      - "python -m spacy train configs/config.cfg --output training/${vars.treebank}.${vars.max_texts}-novectors/ --paths.train corpus/${vars.treebank}/train.spacy --paths.dev corpus/${vars.treebank}/dev.spacy --gpu-id ${vars.gpu_id} --initialize.vectors null --components.tok2vec.model.embed.include_static_vectors false"
+      - "python -m spacy train configs/config.cfg --output training/${vars.treebank}-novectors/ --paths.train corpus/${vars.treebank}/train.spacy --paths.dev corpus/${vars.treebank}/dev.spacy --gpu-id ${vars.gpu_id} --initialize.vectors null --components.tok2vec.model.embed.include_static_vectors false"
     deps:
       - "configs/config.cfg"
       - "corpus/${vars.treebank}/train.spacy"
       - "corpus/${vars.treebank}/dev.spacy"
     outputs:
-      - "training/${vars.treebank}.${vars.max_texts}-novectors/model-best"
+      - "training/${vars.treebank}-novectors/model-best"
 
-  - name: "train-default"
+  - name: "train-standard"
     help: "Train the model with default vectors"
     script:
-      - "python -m spacy train configs/config.cfg --output training/${vars.treebank}.${vars.max_texts}-default/ --paths.train corpus/${vars.treebank}/train.spacy --paths.dev corpus/${vars.treebank}/dev.spacy --gpu-id ${vars.gpu_id} --initialize.vectors vectors/${vars.oscar_dataset}.${vars.max_texts}_default_model"
+      - "python -m spacy train configs/config.cfg --output training/${vars.treebank}.${vars.max_texts}-standard/ --paths.train corpus/${vars.treebank}/train.spacy --paths.dev corpus/${vars.treebank}/dev.spacy --gpu-id ${vars.gpu_id} --initialize.vectors vectors/${vars.oscar_dataset}.${vars.max_texts}_standard_model"
     deps:
       - "configs/config.cfg"
       - "corpus/${vars.treebank}/train.spacy"
       - "corpus/${vars.treebank}/dev.spacy"
-      - "vectors/${vars.oscar_dataset}.${vars.max_texts}_default_model"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}_standard_model"
     outputs:
-      - "training/${vars.treebank}.${vars.max_texts}-default/model-best"
+      - "training/${vars.treebank}.${vars.max_texts}-standard/model-best"
 
   - name: "train-ngram"
     help: "Train the model with ngram vectors"
@@ -176,18 +180,18 @@ commands:
   - name: "evaluate"
     help: "Evaluate the models and export metrics"
     script:
-      - "mkdir -p metrics/${vars.treebank}.${vars.max_texts}-novectors"
-      - "python -m spacy evaluate training/${vars.treebank}.${vars.max_texts}-novectors/model-best corpus/${vars.treebank}/test.spacy --output metrics/${vars.treebank}.${vars.max_texts}-novectors/metrics.json --gpu-id ${vars.gpu_id}"
-      - "mkdir -p metrics/${vars.treebank}.${vars.max_texts}-default"
-      - "python -m spacy evaluate training/${vars.treebank}.${vars.max_texts}-default/model-best corpus/${vars.treebank}/test.spacy --output metrics/${vars.treebank}.${vars.max_texts}-default/metrics.json --gpu-id ${vars.gpu_id}"
+      - "mkdir -p metrics/${vars.treebank}-novectors"
+      - "python -m spacy evaluate training/${vars.treebank}-novectors/model-best corpus/${vars.treebank}/test.spacy --output metrics/${vars.treebank}-novectors/metrics.json --gpu-id ${vars.gpu_id}"
+      - "mkdir -p metrics/${vars.treebank}.${vars.max_texts}-standard"
+      - "python -m spacy evaluate training/${vars.treebank}.${vars.max_texts}-standard/model-best corpus/${vars.treebank}/test.spacy --output metrics/${vars.treebank}.${vars.max_texts}-standard/metrics.json --gpu-id ${vars.gpu_id}"
       - "mkdir -p metrics/${vars.treebank}.${vars.max_texts}-ngram"
       - "python -m spacy evaluate training/${vars.treebank}.${vars.max_texts}-ngram/model-best corpus/${vars.treebank}/test.spacy --output metrics/${vars.treebank}.${vars.max_texts}-ngram/metrics.json --gpu-id ${vars.gpu_id}"
     deps:
       - "corpus/${vars.treebank}/test.spacy"
-      - "training/${vars.treebank}.${vars.max_texts}-novectors/model-best"
-      - "training/${vars.treebank}.${vars.max_texts}-default/model-best"
+      - "training/${vars.treebank}-novectors/model-best"
+      - "training/${vars.treebank}.${vars.max_texts}-standard/model-best"
       - "training/${vars.treebank}.${vars.max_texts}-ngram/model-best"
     outputs:
-      - "metrics/${vars.treebank}.${vars.max_texts}-novectors/metrics.json"
-      - "metrics/${vars.treebank}.${vars.max_texts}-default/metrics.json"
+      - "metrics/${vars.treebank}-novectors/metrics.json"
+      - "metrics/${vars.treebank}.${vars.max_texts}-standard/metrics.json"
       - "metrics/${vars.treebank}.${vars.max_texts}-ngram/metrics.json"
