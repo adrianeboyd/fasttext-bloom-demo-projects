@@ -19,7 +19,7 @@ vectors using [`QVEC`](https://github.com/ytsvetko/qvec):
 
 Demos for training vectors and and spaCy pipelines with a focus on cases where
 `fasttext-bloom` vectors are expected to improve the performance as compared to
-standard `fasttext` vectors on an fixed vocabulary:
+standard `fasttext` vectors on a fixed vocabulary:
 
 * [`ftb_ko_ud_demo`](ftb_ko_ud_demo): agglutinative languages with Korean UD
 
