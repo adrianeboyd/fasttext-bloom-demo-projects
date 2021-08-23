@@ -32,13 +32,14 @@ standard `fasttext` vectors on a fixed vocabulary:
   | standard (pruned)      | 78.2 | 89.7 | 78.9    | 73.1    |
   | bloom (minn 2, maxn 3) | 83.2 | 94.2 | 83.4    | 80.7    |
 
-   With 12G tokenized training texts and 50K 300-dim vectors, ~1M keys for
-   the standard vectors:
+   With 12G tokenized training texts and 50K 300-dim vectors (except for 
+   unpruned), ~1M keys for the standard vectors:
 
   | Vectors                | TAG  | POS  | DEP UAS | DEP LAS | SPEED |
   | ---------------------- | ---: | ---: | ------: | ------: | ----: |
   | none                   | 72.6 | 85.0 | 73.3    | 64.6    | 15272 |
   | standard (pruned)      | 78.9 | 89.9 | 79.0    | 73.5    | 14754 |
+  | standard (unpruned)    | 81.6 | 91.8 | 80.8    | 76.1    | 14200 |
   | bloom (minn 2, maxn 3) | 83.6 | 94.3 | 83.5    | 80.7    | 13530 |
 
 * [`ftb_hu_ner_demo`](ftb_hu_ner_demo): agglutinative

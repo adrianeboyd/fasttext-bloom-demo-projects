@@ -45,10 +45,12 @@ workflows:
     - tokenize-oscar
     - train-fasttext-standard
     - train-fasttext-bloom
+    - init-standard-unpruned-vectors
     - init-standard-vectors
     - init-bloom-vectors
     - convert
     - train-no-vectors
+    - train-standard-unpruned
     - train-standard
     - train-bloom
     - evaluate
@@ -94,6 +96,15 @@ commands:
     outputs:
       - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount50.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount2.bucket${vars.vector_size}.hashvec"
       - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount50.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount2.bucket${vars.vector_size}.vec"
+
+  - name: "init-standard-unpruned-vectors"
+    help: "Create a standard unpruned vectors model"
+    script:
+      - "python -m spacy init vectors xx vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount50.n${vars.minn}-${vars.maxn}.neg10.vec vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_standard_unpruned_model"
+    deps:
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount50.n${vars.minn}-${vars.maxn}.neg10.vec"
+    outputs:
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_standard_unpruned_model"
 
   - name: "init-standard-vectors"
     help: "Create a standard vectors model"
@@ -141,6 +152,18 @@ commands:
     outputs:
       - "training/${vars.treebank}-novectors/model-best"
 
+  - name: "train-standard-unpruned"
+    help: "Train the model with standard, unpruned vectors"
+    script:
+      - "python -m spacy train configs/config.cfg --output training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard-unpruned/ --paths.train corpus/${vars.treebank}/train.spacy --paths.dev corpus/${vars.treebank}/dev.spacy --gpu-id ${vars.gpu_id} --initialize.vectors vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_standard_unpruned_model --training.max_steps ${vars.max_steps}"
+    deps:
+      - "configs/config.cfg"
+      - "corpus/${vars.treebank}/train.spacy"
+      - "corpus/${vars.treebank}/dev.spacy"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_standard_unpruned_model"
+    outputs:
+      - "training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard-unpruned/model-best"
+
   - name: "train-standard"
     help: "Train the model with standard, pruned vectors"
     script:
@@ -170,6 +193,8 @@ commands:
     script:
       - "mkdir -p metrics/${vars.treebank}-novectors"
       - "python -m spacy evaluate training/${vars.treebank}-novectors/model-best corpus/${vars.treebank}/test.spacy --output metrics/${vars.treebank}-novectors/metrics.json --gpu-id ${vars.gpu_id}"
+      - "mkdir -p metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard-unpruned"
+      - "python -m spacy evaluate training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard-unpruned/model-best corpus/${vars.treebank}/test.spacy --output metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard-unpruned/metrics.json --gpu-id ${vars.gpu_id}"
       - "mkdir -p metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard"
       - "python -m spacy evaluate training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard/model-best corpus/${vars.treebank}/test.spacy --output metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard/metrics.json --gpu-id ${vars.gpu_id}"
       - "mkdir -p metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-bloom"
@@ -177,9 +202,11 @@ commands:
     deps:
       - "corpus/${vars.treebank}/test.spacy"
       - "training/${vars.treebank}-novectors/model-best"
+      - "training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard-unpruned/model-best"
       - "training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard/model-best"
       - "training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-bloom/model-best"
     outputs:
       - "metrics/${vars.treebank}-novectors/metrics.json"
+      - "metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard-unpruned/metrics.json"
       - "metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard/metrics.json"
       - "metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-bloom/metrics.json"
