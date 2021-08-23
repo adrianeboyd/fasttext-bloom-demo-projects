@@ -42,6 +42,18 @@ standard `fasttext` vectors on a fixed vocabulary:
   | standard (unpruned)    | 81.6 | 91.8 | 80.8    | 76.1    | 14200 |
   | bloom (minn 2, maxn 3) | 83.6 | 94.3 | 83.5    | 80.7    | 13530 |
 
+* [`ftb_fi_ud_demo`](ftb_fi_ud_demo): agglutinative languages with Finnish UD
+
+   With 13G tokenized training texts and 50K 300-dim vectors (except for
+   unpruned), ~1M keys for the standard vectors:
+
+  | Vectors                | TAG  | POS  | MORPH | DEP UAS | DEP LAS | SPEED |
+  | ---------------------- | ---: | ---: | ----: | ------: | ------: | ----: |
+  | none                   | 93.1 | 92.1 | 85.0  | 78.7    | 71.5    | 12693 |
+  | standard (pruned)      | 96.6 | 95.4 | 89.3  | 83.5    | 78.3    | 13407 |
+  | standard (unpruned)    | 97.0 | 95.9 | 90.9  | 84.4    | 79.5    | 13269 |
+  | bloom (minn 4, maxn 5) | 97.1 | 96.0 | 91.0  | 84.8    | 80.0    | 12044 |
+
 * [`ftb_hu_ner_demo`](ftb_hu_ner_demo): agglutinative
   languages with Hungarian NER
 
