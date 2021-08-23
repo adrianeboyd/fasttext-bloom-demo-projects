@@ -16,6 +16,7 @@ vars:
   train_name: "fi_tdt-ud-train"
   dev_name: "fi_tdt-ud-dev"
   test_name: "fi_tdt-ud-test"
+  corpus_ner: "turku-ner-corpus"
   gpu_id: -1
 
 # These are the directories that the project needs. The project CLI will make
@@ -33,6 +34,11 @@ assets:
   - dest: "assets/${vars.treebank}"
     git:
       repo: "https://github.com/UniversalDependencies/${vars.treebank}"
+      branch: "master"
+      path: ""
+  - dest: "assets/${vars.corpus_ner}"
+    git:
+      repo: "https://github.com/TurkuNLP/turku-ner-corpus"
       branch: "master"
       path: ""
 
@@ -54,6 +60,12 @@ workflows:
     - train-standard
     - train-bloom
     - evaluate
+    - convert-ner
+    - train-no-vectors-ner
+    - train-standard-unpruned-ner
+    - train-standard-ner
+    - train-bloom-ner
+    - evaluate-ner
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
 # pipelines). The name is the command name that lets you trigger the command
@@ -63,7 +75,7 @@ commands:
   - name: "compile-fasttext"
     help: "Compile fasttext-bloom"
     script:
-      - "make -C software/fasttext-bloom"
+      - "make -j ${vars.n_process} -C software/fasttext-bloom"
     # this doesn't really work, the no_skip bug fix is needed
     outputs:
       - "software/fasttext-bloom/fasttext-bloom"
@@ -210,3 +222,87 @@ commands:
       - "metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard-unpruned/metrics.json"
       - "metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard/metrics.json"
       - "metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-bloom/metrics.json"
+
+  - name: "convert-ner"
+    help: "Convert the data to spaCy's format"
+    script:
+      - "mkdir -p corpus/${vars.corpus_ner}"
+      - "python -m spacy convert assets/${vars.corpus_ner}/data/conll/train.tsv corpus/${vars.corpus_ner}/ -c ner --n-sents 10"
+      - "python -m spacy convert assets/${vars.corpus_ner}/data/conll/dev.tsv corpus/${vars.corpus_ner}/ -c ner --n-sents 10"
+      - "python -m spacy convert assets/${vars.corpus_ner}/data/conll/test.tsv corpus/${vars.corpus_ner}/ -c ner --n-sents 10"
+    deps:
+      - "assets/${vars.corpus_ner}/"
+    outputs:
+      - "corpus/${vars.corpus_ner}/train.spacy"
+      - "corpus/${vars.corpus_ner}/dev.spacy"
+      - "corpus/${vars.corpus_ner}/test.spacy"
+
+  - name: "train-no-vectors-ner"
+    help: "Train the model without vectors"
+    script:
+      - "python -m spacy train configs/config_ner.cfg --output training/${vars.corpus_ner}-novectors/ --paths.train corpus/${vars.corpus_ner}/train.spacy --paths.dev corpus/${vars.corpus_ner}/dev.spacy --gpu-id ${vars.gpu_id} --initialize.vectors null --components.tok2vec.model.embed.include_static_vectors false --training.max_steps ${vars.max_steps}"
+    deps:
+      - "configs/config_ner.cfg"
+      - "corpus/${vars.corpus_ner}/train.spacy"
+      - "corpus/${vars.corpus_ner}/dev.spacy"
+    outputs:
+      - "training/${vars.corpus_ner}-novectors/model-best"
+
+  - name: "train-standard-unpruned-ner"
+    help: "Train the model with standard, unpruned vectors"
+    script:
+      - "python -m spacy train configs/config_ner.cfg --output training/${vars.corpus_ner}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard-unpruned/ --paths.train corpus/${vars.corpus_ner}/train.spacy --paths.dev corpus/${vars.corpus_ner}/dev.spacy --gpu-id ${vars.gpu_id} --initialize.vectors vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_standard_unpruned_model --training.max_steps ${vars.max_steps}"
+    deps:
+      - "configs/config_ner.cfg"
+      - "corpus/${vars.corpus_ner}/train.spacy"
+      - "corpus/${vars.corpus_ner}/dev.spacy"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_standard_unpruned_model"
+    outputs:
+      - "training/${vars.corpus_ner}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard-unpruned/model-best"
+
+  - name: "train-standard-ner"
+    help: "Train the model with standard, pruned vectors"
+    script:
+      - "python -m spacy train configs/config_ner.cfg --output training/${vars.corpus_ner}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard/ --paths.train corpus/${vars.corpus_ner}/train.spacy --paths.dev corpus/${vars.corpus_ner}/dev.spacy --gpu-id ${vars.gpu_id} --initialize.vectors vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_standard_model --training.max_steps ${vars.max_steps}"
+    deps:
+      - "configs/config_ner.cfg"
+      - "corpus/${vars.corpus_ner}/train.spacy"
+      - "corpus/${vars.corpus_ner}/dev.spacy"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_standard_model"
+    outputs:
+      - "training/${vars.corpus_ner}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard/model-best"
+
+  - name: "train-bloom-ner"
+    help: "Train the model with ngram vectors"
+    script:
+      - "python -m spacy train configs/config_ner.cfg --output training/${vars.corpus_ner}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-bloom/ --paths.train corpus/${vars.corpus_ner}/train.spacy --paths.dev corpus/${vars.corpus_ner}/dev.spacy --gpu-id ${vars.gpu_id} --initialize.vectors vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_ngram_model --training.max_steps ${vars.max_steps}"
+    deps:
+      - "configs/config_ner.cfg"
+      - "corpus/${vars.corpus_ner}/train.spacy"
+      - "corpus/${vars.corpus_ner}/dev.spacy"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_ngram_model"
+    outputs:
+      - "training/${vars.corpus_ner}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-bloom/model-best"
+
+  - name: "evaluate-ner"
+    help: "Evaluate the models and export metrics"
+    script:
+      - "mkdir -p metrics/${vars.corpus_ner}-novectors"
+      - "python -m spacy evaluate training/${vars.corpus_ner}-novectors/model-best corpus/${vars.corpus_ner}/test.spacy --output metrics/${vars.corpus_ner}-novectors/metrics.json --gpu-id ${vars.gpu_id}"
+      - "mkdir -p metrics/${vars.corpus_ner}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard-unpruned"
+      - "python -m spacy evaluate training/${vars.corpus_ner}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard-unpruned/model-best corpus/${vars.corpus_ner}/test.spacy --output metrics/${vars.corpus_ner}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard-unpruned/metrics.json --gpu-id ${vars.gpu_id}"
+      - "mkdir -p metrics/${vars.corpus_ner}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard"
+      - "python -m spacy evaluate training/${vars.corpus_ner}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard/model-best corpus/${vars.corpus_ner}/test.spacy --output metrics/${vars.corpus_ner}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard/metrics.json --gpu-id ${vars.gpu_id}"
+      - "mkdir -p metrics/${vars.corpus_ner}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-bloom"
+      - "python -m spacy evaluate training/${vars.corpus_ner}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-bloom/model-best corpus/${vars.corpus_ner}/test.spacy --output metrics/${vars.corpus_ner}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-bloom/metrics.json --gpu-id ${vars.gpu_id}"
+    deps:
+      - "corpus/${vars.corpus_ner}/test.spacy"
+      - "training/${vars.corpus_ner}-novectors/model-best"
+      - "training/${vars.corpus_ner}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard-unpruned/model-best"
+      - "training/${vars.corpus_ner}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard/model-best"
+      - "training/${vars.corpus_ner}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-bloom/model-best"
+    outputs:
+      - "metrics/${vars.corpus_ner}-novectors/metrics.json"
+      - "metrics/${vars.corpus_ner}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard-unpruned/metrics.json"
+      - "metrics/${vars.corpus_ner}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard/metrics.json"
+      - "metrics/${vars.corpus_ner}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-bloom/metrics.json"
