@@ -1,5 +1,5 @@
-title: "Demo fasttext-bloom vectors for UD Finnish TDT"
-description: "Train fasttext-bloom vectors on OSCAR and compare standard vectors vs. fasttext-bloom vectors on UD Finnish TDT."
+title: "Demo fasttext-bloom vectors for Finnish"
+description: "Train fasttext-bloom vectors on OSCAR and compare standard vectors vs. fasttext-bloom vectors on UD Finnish TDT and turku-ner-corpus."
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   name: "ftb_fi_ud_demo"

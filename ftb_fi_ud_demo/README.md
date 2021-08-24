@@ -1,8 +1,8 @@
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS START (do not remove) -->
 
-# 🪐 spaCy Project: Demo fasttext-bloom vectors for UD Korean Kaist
+# 🪐 spaCy Project: Demo fasttext-bloom vectors for Finnish
 
-Train fasttext-bloom vectors on OSCAR and compare default pruned vectors vs. fasttext-bloom vectors on UD Korean Kaist.
+Train fasttext-bloom vectors on OSCAR and compare standard vectors vs. fasttext-bloom vectors on UD Finnish TDT and turku-ner-corpus.
 
 ## 📋 project.yml
 
@@ -20,15 +20,23 @@ Commands are only re-run if their inputs have changed.
 | --- | --- |
 | `compile-fasttext` | Compile fasttext-bloom |
 | `tokenize-oscar` | Download, tokenize, and sentencize data |
-| `train-fasttext` | Train fasttext-bloom vectors |
-| `fasttext-nn` | Demo fasttext-bloom vectors |
-| `init-default-vectors` | Create a default vectors model |
-| `init-ngram-vectors` | Create an ngram vectors model |
+| `train-fasttext-standard` | Train standard fasttext vectors |
+| `train-fasttext-bloom` | Train fasttext-bloom vectors |
+| `init-standard-unpruned-vectors` | Create a standard unpruned vectors model |
+| `init-standard-vectors` | Create a standard vectors model |
+| `init-bloom-vectors` | Create an ngram vectors model |
 | `convert` | Convert the data to spaCy's format |
 | `train-no-vectors` | Train the model without vectors |
-| `train-default` | Train the model with default vectors |
-| `train-ngram` | Train the model with ngram vectors |
+| `train-standard-unpruned` | Train the model with standard, unpruned vectors |
+| `train-standard` | Train the model with standard, pruned vectors |
+| `train-bloom` | Train the model with ngram vectors |
 | `evaluate` | Evaluate the models and export metrics |
+| `convert-ner` | Convert the data to spaCy's format |
+| `train-no-vectors-ner` | Train the model without vectors |
+| `train-standard-unpruned-ner` | Train the model with standard, unpruned vectors |
+| `train-standard-ner` | Train the model with standard, pruned vectors |
+| `train-bloom-ner` | Train the model with ngram vectors |
+| `evaluate-ner` | Evaluate the models and export metrics |
 
 ### ⏭ Workflows
 
@@ -39,7 +47,7 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `all` | `compile-fasttext` &rarr; `tokenize-oscar` &rarr; `train-fasttext` &rarr; `init-default-vectors` &rarr; `init-ngram-vectors` &rarr; `convert` &rarr; `train-no-vectors` &rarr; `train-default` &rarr; `train-ngram` &rarr; `evaluate` |
+| `all` | `compile-fasttext` &rarr; `tokenize-oscar` &rarr; `train-fasttext-standard` &rarr; `train-fasttext-bloom` &rarr; `init-standard-unpruned-vectors` &rarr; `init-standard-vectors` &rarr; `init-bloom-vectors` &rarr; `convert` &rarr; `train-no-vectors` &rarr; `train-standard-unpruned` &rarr; `train-standard` &rarr; `train-bloom` &rarr; `evaluate` &rarr; `convert-ner` &rarr; `train-no-vectors-ner` &rarr; `train-standard-unpruned-ner` &rarr; `train-standard-ner` &rarr; `train-bloom-ner` &rarr; `evaluate-ner` |
 
 ### 🗂 Assets
 
@@ -50,6 +58,7 @@ in the project directory.
 | File | Source | Description |
 | --- | --- | --- |
 | `software/fasttext-bloom` | Git |  |
-| `assets/UD_Korean-Kaist` | Git |  |
+| `assets/UD_Finnish-TDT` | Git |  |
+| `assets/turku-ner-corpus` | Git |  |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
