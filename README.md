@@ -78,7 +78,7 @@ standard `fasttext` vectors on a fixed vocabulary:
   | standard (pruned)       | 34.5 | 25.6 | 29.4 |
   | floret (minn 5, maxn 6) | 39.9 | 23.3 | 29.4 |
 
-- [`ftb_en_so_ner_demo`](ftb_en_so_ner_demo):
+- [`floret_en_so_ner_demo`](floret_en_so_ner_demo):
   out-of-domain data with English NER for StackOverflow vs. GitHub
 
   With 500K (2.5G) tokenized training texts and 20K 300-dim vectors:
@@ -103,11 +103,6 @@ data, but should show some results and train in a not-too-unreasonable
 amount of time on a small number of threads.
 
 For reference, 1M texts from the OSCAR datasets are about 5G for
-English, 4G for Hungarian, and 3G for Korean. In some of the projects,
-to demonstrate streaming from huggingface's `datasets` more explicitly,
-the texts are downloaded and tokenized in two separate steps, which
-doubles the amount of disk space required.
-
-`fasttext` does not support streamed input, so it is necessary to have
-the tokenized training data saved in a file. Outside of a demo, I'd
-often use tmpfs.
+English, 4G for Hungarian, and 3G for Korean. `fasttext` does not support
+streamed input, so it is necessary to have the tokenized training data saved in
+a file. Outside of a demo, I'd often use tmpfs.
