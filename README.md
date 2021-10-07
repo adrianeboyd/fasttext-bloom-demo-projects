@@ -54,7 +54,7 @@ standard `fasttext` vectors on a fixed vocabulary:
   | standard (unpruned)     | 97.0 | 96.0 |  90.9 |    84.6 |    80.0 |   72.2 |          13269 |
   | floret (minn 4, maxn 5) | 97.1 | 96.0 |  91.6 |    84.6 |    80.2 |   73.6 |          12044 |
 
-- [`ftb_hu_ner_demo`](ftb_hu_ner_demo): agglutinative
+- [`floret_hu_ner_demo`](floret_hu_ner_demo): agglutinative
   languages with Hungarian NER
 
   With 500K (1.5G) tokenized training texts and 50K 300-dim vectors, with
