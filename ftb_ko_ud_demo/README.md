@@ -1,8 +1,8 @@
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS START (do not remove) -->
 
-# 🪐 spaCy Project: Demo fasttext-bloom vectors for UD Korean Kaist
+# 🪐 spaCy Project: Demo floret vectors for UD Korean Kaist
 
-Train fasttext-bloom vectors on OSCAR and compare default pruned vectors vs. fasttext-bloom vectors on UD Korean Kaist.
+Train floret vectors on OSCAR and compare no vectors, standard vectors, and floret vectors on UD Korean Kaist.
 
 ## 📋 project.yml
 
@@ -18,16 +18,18 @@ Commands are only re-run if their inputs have changed.
 
 | Command | Description |
 | --- | --- |
-| `compile-fasttext` | Compile fasttext-bloom |
+| `compile-floret` | Compile floret |
 | `tokenize-oscar` | Download, tokenize, and sentencize data |
-| `train-fasttext` | Train fasttext-bloom vectors |
-| `fasttext-nn` | Demo fasttext-bloom vectors |
-| `init-default-vectors` | Create a default vectors model |
-| `init-ngram-vectors` | Create an ngram vectors model |
+| `train-fasttext-standard-vectors` | Train standard fasttext vectors |
+| `train-floret-vectors` | Train floret vectors |
+| `init-standard-unpruned-vectors` | Create a standard unpruned vectors model |
+| `init-standard-vectors` | Create a standard vectors model |
+| `init-floret-vectors` | Create an ngram vectors model |
 | `convert` | Convert the data to spaCy's format |
-| `train-no-vectors` | Train the model without vectors |
-| `train-default` | Train the model with default vectors |
-| `train-ngram` | Train the model with ngram vectors |
+| `train-no-vectors-model` | Train the model without vectors |
+| `train-standard-unpruned-model` | Train the model with standard, unpruned vectors |
+| `train-standard-model` | Train the model with standard, pruned vectors |
+| `train-floret-model` | Train the model with ngram vectors |
 | `evaluate` | Evaluate the models and export metrics |
 
 ### ⏭ Workflows
@@ -39,7 +41,7 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `all` | `compile-fasttext` &rarr; `tokenize-oscar` &rarr; `train-fasttext` &rarr; `init-default-vectors` &rarr; `init-ngram-vectors` &rarr; `convert` &rarr; `train-no-vectors` &rarr; `train-default` &rarr; `train-ngram` &rarr; `evaluate` |
+| `all` | `compile-floret` &rarr; `tokenize-oscar` &rarr; `train-fasttext-standard-vectors` &rarr; `train-floret-vectors` &rarr; `init-standard-unpruned-vectors` &rarr; `init-standard-vectors` &rarr; `init-floret-vectors` &rarr; `convert` &rarr; `train-no-vectors-model` &rarr; `train-standard-unpruned-model` &rarr; `train-standard-model` &rarr; `train-floret-model` &rarr; `evaluate` |
 
 ### 🗂 Assets
 
@@ -49,7 +51,7 @@ in the project directory.
 
 | File | Source | Description |
 | --- | --- | --- |
-| `software/fasttext-bloom` | Git |  |
+| `software/floret` | Git |  |
 | `assets/UD_Korean-Kaist` | Git |  |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->

@@ -1,5 +1,5 @@
-title: "Demo fasttext-bloom vectors for UD Korean Kaist"
-description: "Train fasttext-bloom vectors on OSCAR and compare standard pruned vectors vs. fasttext-bloom vectors on UD Korean Kaist."
+title: "Demo floret vectors for UD Korean Kaist"
+description: "Train floret vectors on OSCAR and compare no vectors, standard vectors, and floret vectors on UD Korean Kaist."
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   name: "ftb_ko_ud_demo"
@@ -8,7 +8,7 @@ vars:
   max_texts: 1000000
   vector_size: 50000
   vector_dim: 300
-  n_process: 8
+  n_process: 24
   minn: 2
   maxn: 3
   max_steps: 20000
@@ -25,10 +25,10 @@ directories: ["assets", "corpus", "training", "metrics", "software", "training",
 # Assets that should be downloaded or available in the directory. We're shipping
 # them with the project, so they won't have to be downloaded.
 assets:
-  - dest: "software/fasttext-bloom"
+  - dest: "software/floret"
     git:
-      repo: "https://github.com/adrianeboyd/fastText/"
-      branch: "feature/bloom"
+      repo: "https://github.com/explosion/floret"
+      branch: "master"
       path: ""
   - dest: "assets/${vars.treebank}"
     git:
@@ -41,18 +41,18 @@ assets:
 ## haven't changed, it won't be re-run.
 workflows:
   all:
-    - compile-fasttext
+    - compile-floret
     - tokenize-oscar
-    - train-fasttext-standard
-    - train-fasttext-bloom
+    - train-fasttext-standard-vectors
+    - train-floret-vectors
     - init-standard-unpruned-vectors
     - init-standard-vectors
-    - init-bloom-vectors
+    - init-floret-vectors
     - convert
-    - train-no-vectors
-    - train-standard-unpruned
-    - train-standard
-    - train-bloom
+    - train-no-vectors-model
+    - train-standard-unpruned-model
+    - train-standard-model
+    - train-floret-model
     - evaluate
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
@@ -60,14 +60,12 @@ workflows:
 # via "spacy project run [command] [path]". The help message is optional and
 # shown when executing "spacy project run [optional command] [path] --help".
 commands:
-  - name: "compile-fasttext"
-    help: "Compile fasttext-bloom"
+  - name: "compile-floret"
+    help: "Compile floret"
     script:
-      - "make -C software/fasttext-bloom"
-    # this doesn't really work, the no_skip bug fix is needed
+      - "make -C software/floret"
     outputs:
-      - "software/fasttext-bloom/fasttext-bloom"
-    no_skip: true
+      - "software/floret/floret"
 
   - name: "tokenize-oscar"
     help: "Download, tokenize, and sentencize data"
@@ -78,23 +76,23 @@ commands:
     outputs:
       - "corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt"
 
-  - name: "train-fasttext-standard"
+  - name: "train-fasttext-standard-vectors"
     help: "Train standard fasttext vectors"
     script:
-      - "software/fasttext-bloom/fasttext-bloom cbow -dim ${vars.vector_dim} -minCount 50 -minn ${vars.minn} -maxn ${vars.maxn} -neg 10 -thread ${vars.n_process} -input corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt -output vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount50.n${vars.minn}-${vars.maxn}.neg10"
+      - "software/floret/floret cbow -dim ${vars.vector_dim} -minCount 50 -minn ${vars.minn} -maxn ${vars.maxn} -neg 10 -thread ${vars.n_process} -input corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt -output vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount50.n${vars.minn}-${vars.maxn}.neg10"
     deps:
       - "corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt"
     outputs:
       - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount50.n${vars.minn}-${vars.maxn}.neg10.vec"
 
-  - name: "train-fasttext-bloom"
-    help: "Train fasttext-bloom vectors"
+  - name: "train-floret-vectors"
+    help: "Train floret vectors"
     script:
-      - "software/fasttext-bloom/fasttext-bloom cbow -dim ${vars.vector_dim} -minCount 50 -minn ${vars.minn} -maxn ${vars.maxn} -neg 10 -hashOnly -hashCount 2 -bucket ${vars.vector_size} -thread ${vars.n_process} -input corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt -output vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount50.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount2.bucket${vars.vector_size}"
+      - "software/floret/floret cbow -dim ${vars.vector_dim} -minCount 50 -minn ${vars.minn} -maxn ${vars.maxn} -neg 10 -mode floret -hashCount 2 -bucket ${vars.vector_size} -thread ${vars.n_process} -input corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt -output vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount50.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount2.bucket${vars.vector_size}"
     deps:
       - "corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt"
     outputs:
-      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount50.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount2.bucket${vars.vector_size}.hashvec"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount50.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount2.bucket${vars.vector_size}.floret"
       - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount50.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount2.bucket${vars.vector_size}.vec"
 
   - name: "init-standard-unpruned-vectors"
@@ -115,12 +113,12 @@ commands:
     outputs:
       - "vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_standard_model"
 
-  - name: "init-bloom-vectors"
+  - name: "init-floret-vectors"
     help: "Create an ngram vectors model"
     script:
-      - "python -m spacy init vectors xx vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount50.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount2.bucket${vars.vector_size}.hashvec vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_ngram_model --fasttext-bloom-vectors"
+      - "python -m spacy init vectors xx vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount50.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount2.bucket${vars.vector_size}.floret vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_ngram_model --mode floret"
     deps:
-      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount50.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount2.bucket${vars.vector_size}.hashvec"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount50.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount2.bucket${vars.vector_size}.floret"
     outputs:
       - "vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_ngram_model"
 
@@ -141,7 +139,7 @@ commands:
       - "corpus/${vars.treebank}/dev.spacy"
       - "corpus/${vars.treebank}/test.spacy"
 
-  - name: "train-no-vectors"
+  - name: "train-no-vectors-model"
     help: "Train the model without vectors"
     script:
       - "python -m spacy train configs/config.cfg --output training/${vars.treebank}-novectors/ --paths.train corpus/${vars.treebank}/train.spacy --paths.dev corpus/${vars.treebank}/dev.spacy --gpu-id ${vars.gpu_id} --initialize.vectors null --components.tok2vec.model.embed.include_static_vectors false --training.max_steps ${vars.max_steps}"
@@ -152,7 +150,7 @@ commands:
     outputs:
       - "training/${vars.treebank}-novectors/model-best"
 
-  - name: "train-standard-unpruned"
+  - name: "train-standard-unpruned-model"
     help: "Train the model with standard, unpruned vectors"
     script:
       - "python -m spacy train configs/config.cfg --output training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard-unpruned/ --paths.train corpus/${vars.treebank}/train.spacy --paths.dev corpus/${vars.treebank}/dev.spacy --gpu-id ${vars.gpu_id} --initialize.vectors vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_standard_unpruned_model --training.max_steps ${vars.max_steps}"
@@ -164,7 +162,7 @@ commands:
     outputs:
       - "training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard-unpruned/model-best"
 
-  - name: "train-standard"
+  - name: "train-standard-model"
     help: "Train the model with standard, pruned vectors"
     script:
       - "python -m spacy train configs/config.cfg --output training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard/ --paths.train corpus/${vars.treebank}/train.spacy --paths.dev corpus/${vars.treebank}/dev.spacy --gpu-id ${vars.gpu_id} --initialize.vectors vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_standard_model --training.max_steps ${vars.max_steps}"
@@ -176,17 +174,17 @@ commands:
     outputs:
       - "training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard/model-best"
 
-  - name: "train-bloom"
+  - name: "train-floret-model"
     help: "Train the model with ngram vectors"
     script:
-      - "python -m spacy train configs/config.cfg --output training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-bloom/ --paths.train corpus/${vars.treebank}/train.spacy --paths.dev corpus/${vars.treebank}/dev.spacy --gpu-id ${vars.gpu_id} --initialize.vectors vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_ngram_model --training.max_steps ${vars.max_steps}"
+      - "python -m spacy train configs/config.cfg --output training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-floret/ --paths.train corpus/${vars.treebank}/train.spacy --paths.dev corpus/${vars.treebank}/dev.spacy --gpu-id ${vars.gpu_id} --initialize.vectors vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_ngram_model --training.max_steps ${vars.max_steps}"
     deps:
       - "configs/config.cfg"
       - "corpus/${vars.treebank}/train.spacy"
       - "corpus/${vars.treebank}/dev.spacy"
       - "vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_ngram_model"
     outputs:
-      - "training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-bloom/model-best"
+      - "training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-floret/model-best"
 
   - name: "evaluate"
     help: "Evaluate the models and export metrics"
@@ -197,16 +195,16 @@ commands:
       - "python -m spacy evaluate training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard-unpruned/model-best corpus/${vars.treebank}/test.spacy --output metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard-unpruned/metrics.json --gpu-id ${vars.gpu_id}"
       - "mkdir -p metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard"
       - "python -m spacy evaluate training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard/model-best corpus/${vars.treebank}/test.spacy --output metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard/metrics.json --gpu-id ${vars.gpu_id}"
-      - "mkdir -p metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-bloom"
-      - "python -m spacy evaluate training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-bloom/model-best corpus/${vars.treebank}/test.spacy --output metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-bloom/metrics.json --gpu-id ${vars.gpu_id}"
+      - "mkdir -p metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-floret"
+      - "python -m spacy evaluate training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-floret/model-best corpus/${vars.treebank}/test.spacy --output metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-floret/metrics.json --gpu-id ${vars.gpu_id}"
     deps:
       - "corpus/${vars.treebank}/test.spacy"
       - "training/${vars.treebank}-novectors/model-best"
       - "training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard-unpruned/model-best"
       - "training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard/model-best"
-      - "training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-bloom/model-best"
+      - "training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-floret/model-best"
     outputs:
       - "metrics/${vars.treebank}-novectors/metrics.json"
       - "metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard-unpruned/metrics.json"
       - "metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard/metrics.json"
-      - "metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-bloom/metrics.json"
+      - "metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-floret/metrics.json"
