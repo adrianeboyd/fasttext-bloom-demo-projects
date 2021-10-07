@@ -1,2 +1,2 @@
-https://github.com/adrianeboyd/spacy/archive/working/fasttext-exp.zip
+https://github.com/adrianeboyd/spacy/archive/feature/fasttext-bloom-vectors.zip
 datasets[streaming]

@@ -24,18 +24,18 @@ Commands are only re-run if their inputs have changed.
 | `train-floret-vectors` | Train floret vectors |
 | `init-standard-unpruned-vectors` | Create a standard unpruned vectors model |
 | `init-standard-vectors` | Create a standard vectors model |
-| `init-floret-vectors` | Create an ngram vectors model |
+| `init-floret-vectors` | Create a floret vectors model |
 | `convert` | Convert the data to spaCy's format |
 | `train-no-vectors` | Train the model without vectors |
 | `train-standard-unpruned` | Train the model with standard, unpruned vectors |
 | `train-standard` | Train the model with standard, pruned vectors |
-| `train-floret` | Train the model with ngram vectors |
+| `train-floret` | Train the model with floret vectors |
 | `evaluate` | Evaluate the models and export metrics |
 | `convert-ner` | Convert the data to spaCy's format |
 | `train-no-vectors-ner` | Train the model without vectors |
 | `train-standard-unpruned-ner` | Train the model with standard, unpruned vectors |
 | `train-standard-ner` | Train the model with standard, pruned vectors |
-| `train-floret-ner` | Train the model with ngram vectors |
+| `train-floret-ner` | Train the model with floret vectors |
 | `evaluate-ner` | Evaluate the models and export metrics |
 
 ### ⏭ Workflows

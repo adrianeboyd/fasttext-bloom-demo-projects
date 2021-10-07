@@ -23,7 +23,7 @@ Commands are only re-run if their inputs have changed.
 | `train-fasttext-standard` | Train fasttext standard vectors (with ngrams) |
 | `train-floret` | Train floret vectors |
 | `init-default-vectors` | Create an default vectors model |
-| `init-floret-vectors` | Create an ngram vectors model |
+| `init-floret-vectors` | Create a floret vectors model |
 | `export-comparable-vectors` | Export comparable vectors for all qvec eval items |
 | `run-qvec` | Run qvec |
 

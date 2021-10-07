@@ -128,13 +128,13 @@ commands:
       - "vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_standard_model"
 
   - name: "init-floret-vectors"
-    help: "Create an ngram vectors model"
+    help: "Create a floret vectors model"
     script:
-      - "python -m spacy init vectors xx vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount50.n${vars.minn}-${vars.maxn}.neg10.modeFloret.hashCount2.bucket${vars.vector_size}.floret vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_ngram_model --mode floret"
+      - "python -m spacy init vectors xx vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount50.n${vars.minn}-${vars.maxn}.neg10.modeFloret.hashCount2.bucket${vars.vector_size}.floret vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_floret_model --mode floret"
     deps:
       - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.vector_dim}.minCount50.n${vars.minn}-${vars.maxn}.neg10.modeFloret.hashCount2.bucket${vars.vector_size}.floret"
     outputs:
-      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_ngram_model"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_floret_model"
 
   - name: "convert"
     help: "Convert the data to spaCy's format"
@@ -189,14 +189,14 @@ commands:
       - "training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard/model-best"
 
   - name: "train-floret"
-    help: "Train the model with ngram vectors"
+    help: "Train the model with floret vectors"
     script:
-      - "python -m spacy train configs/config.cfg --output training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-floret/ --paths.train corpus/${vars.treebank}/train.spacy --paths.dev corpus/${vars.treebank}/dev.spacy --gpu-id ${vars.gpu_id} --initialize.vectors vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_ngram_model --training.max_steps ${vars.max_steps}"
+      - "python -m spacy train configs/config.cfg --output training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-floret/ --paths.train corpus/${vars.treebank}/train.spacy --paths.dev corpus/${vars.treebank}/dev.spacy --gpu-id ${vars.gpu_id} --initialize.vectors vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_floret_model --training.max_steps ${vars.max_steps}"
     deps:
       - "configs/config.cfg"
       - "corpus/${vars.treebank}/train.spacy"
       - "corpus/${vars.treebank}/dev.spacy"
-      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_ngram_model"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_floret_model"
     outputs:
       - "training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-floret/model-best"
 
@@ -273,14 +273,14 @@ commands:
       - "training/${vars.corpus_ner}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard/model-best"
 
   - name: "train-floret-ner"
-    help: "Train the model with ngram vectors"
+    help: "Train the model with floret vectors"
     script:
-      - "python -m spacy train configs/config_ner.cfg --output training/${vars.corpus_ner}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-floret/ --paths.train corpus/${vars.corpus_ner}/train.spacy --paths.dev corpus/${vars.corpus_ner}/dev.spacy --gpu-id ${vars.gpu_id} --initialize.vectors vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_ngram_model --training.max_steps ${vars.max_steps}"
+      - "python -m spacy train configs/config_ner.cfg --output training/${vars.corpus_ner}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-floret/ --paths.train corpus/${vars.corpus_ner}/train.spacy --paths.dev corpus/${vars.corpus_ner}/dev.spacy --gpu-id ${vars.gpu_id} --initialize.vectors vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_floret_model --training.max_steps ${vars.max_steps}"
     deps:
       - "configs/config_ner.cfg"
       - "corpus/${vars.corpus_ner}/train.spacy"
       - "corpus/${vars.corpus_ner}/dev.spacy"
-      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_ngram_model"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.n${vars.minn}-${vars.maxn}_floret_model"
     outputs:
       - "training/${vars.corpus_ner}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-floret/model-best"
 

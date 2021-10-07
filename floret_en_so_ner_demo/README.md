@@ -23,7 +23,7 @@ Commands are only re-run if their inputs have changed.
 | `train-fasttext-standard-vectors` | Train fasttext standard vectors |
 | `train-floret-vectors` | Train floret vectors |
 | `init-standard-vectors` | Create a default vectors model |
-| `init-floret-vectors` | Create an floret vectors model |
+| `init-floret-vectors` | Create a floret vectors model |
 | `create-config` | Create a new config with an NER pipeline component |
 | `convert` | Convert the data to spaCy's format |
 | `train-novectors` | Train the model with no vectors |

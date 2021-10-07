@@ -99,7 +99,7 @@ commands:
       - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.vec_model"
 
   - name: "init-floret-vectors"
-    help: "Create an ngram vectors model"
+    help: "Create a floret vectors model"
     script:
       - "python -m spacy init vectors ${vars.lang} vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.modeFloret.hashCount${vars.hash_count}.bucket${vars.bucket}.floret vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.modeFloret.hashCount${vars.hash_count}.bucket${vars.bucket}.floret_model --mode floret"
     deps:

@@ -21,7 +21,7 @@ Commands are only re-run if their inputs have changed.
 | `compile-floret` | Compile floret |
 | `tokenize-oscar` | Download, tokenize, and sentencize data |
 | `train-floret` | Train floret vectors |
-| `init-ngram-vectors` | Create an ngram vectors model |
+| `init-floret-vectors` | Create a floret vectors model |
 | `floret-nn` | Demo floret vectors |
 
 ### ⏭ Workflows
@@ -33,7 +33,7 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `all` | `compile-floret` &rarr; `tokenize-oscar` &rarr; `train-floret` &rarr; `init-ngram-vectors` |
+| `all` | `compile-floret` &rarr; `tokenize-oscar` &rarr; `train-floret` &rarr; `init-floret-vectors` |
 
 ### 🗂 Assets
 

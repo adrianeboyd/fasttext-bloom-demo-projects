@@ -30,7 +30,7 @@ workflows:
     - compile-floret
     - tokenize-oscar
     - train-floret
-    - init-ngram-vectors
+    - init-floret-vectors
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
 # pipelines). The name is the command name that lets you trigger the command
@@ -64,14 +64,14 @@ commands:
       - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim300.minCount10.n5-6.neg10.modeFloret.hashCount2.bucket20000.vec"
       - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim300.minCount10.n5-6.neg10.modeFloret.hashCount2.bucket20000.bin"
 
-  - name: "init-ngram-vectors"
-    help: "Create an ngram vectors model"
+  - name: "init-floret-vectors"
+    help: "Create a floret vectors model"
     script:
-      - "python -m spacy init vectors ${vars.lang} vectors/${vars.oscar_dataset}.${vars.max_texts}.dim300.minCount10.n5-6.neg10.modeFloret.hashCount2.bucket20000.floret vectors/${vars.oscar_dataset}.${vars.max_texts}_ngram_model --mode floret" 
+      - "python -m spacy init vectors ${vars.lang} vectors/${vars.oscar_dataset}.${vars.max_texts}.dim300.minCount10.n5-6.neg10.modeFloret.hashCount2.bucket20000.floret vectors/${vars.oscar_dataset}.${vars.max_texts}_floret_model --mode floret" 
     deps:
       - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim300.minCount10.n5-6.neg10.modeFloret.hashCount2.bucket20000.floret"
     outputs:
-      - "vectors/${vars.oscar_dataset}.${vars.max_texts}_ngram_model"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}_floret_model"
 
   - name: "floret-nn"
     help: "Demo floret vectors"
