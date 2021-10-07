@@ -1,8 +1,8 @@
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS START (do not remove) -->
 
-# 🪐 spaCy Project: Evaluate fasttext-bloom vectors with qvec
+# 🪐 spaCy Project: Evaluate floret vectors with qvec
 
-Evaluate fasttext-bloom vectors with qvec
+Evaluate floret vectors with qvec
 
 ## 📋 project.yml
 
@@ -18,12 +18,12 @@ Commands are only re-run if their inputs have changed.
 
 | Command | Description |
 | --- | --- |
-| `compile-fasttext` | Compile fasttext-bloom |
+| `compile-floret` | Compile floret |
 | `tokenize-oscar` | Download, tokenize, and sentencize data |
 | `train-fasttext-standard` | Train fasttext standard vectors (with ngrams) |
-| `train-fasttext-bloom` | Train fasttext-bloom vectors |
+| `train-floret` | Train floret vectors |
 | `init-default-vectors` | Create an default vectors model |
-| `init-ngram-vectors` | Create an ngram vectors model |
+| `init-floret-vectors` | Create an ngram vectors model |
 | `export-comparable-vectors` | Export comparable vectors for all qvec eval items |
 | `run-qvec` | Run qvec |
 
@@ -36,7 +36,7 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `all` | `compile-fasttext` &rarr; `tokenize-oscar` &rarr; `train-fasttext-standard` &rarr; `train-fasttext-bloom` &rarr; `init-default-vectors` &rarr; `init-ngram-vectors` &rarr; `export-comparable-vectors` &rarr; `run-qvec` |
+| `all` | `compile-floret` &rarr; `tokenize-oscar` &rarr; `train-fasttext-standard` &rarr; `train-floret` &rarr; `init-default-vectors` &rarr; `init-floret-vectors` &rarr; `export-comparable-vectors` &rarr; `run-qvec` |
 
 ### 🗂 Assets
 
@@ -46,7 +46,7 @@ in the project directory.
 
 | File | Source | Description |
 | --- | --- | --- |
-| `software/fasttext-bloom` | Git |  |
+| `software/floret` | Git |  |
 | `software/qvec` | Git |  |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->

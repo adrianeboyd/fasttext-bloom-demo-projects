@@ -1,5 +1,5 @@
-title: "Evaluate fasttext-bloom vectors with qvec"
-description: "Evaluate fasttext-bloom vectors with qvec"
+title: "Evaluate floret vectors with qvec"
+description: "Evaluate floret vectors with qvec"
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   name: "ftb_qvec"
@@ -11,7 +11,7 @@ vars:
   minn: 3
   maxn: 6
   hash_count: 2
-  bucket: 20000
+  bucket: 50000
   # number of processes (tokenization) and threads (fasttext)
   n_process: 24
 
@@ -22,10 +22,10 @@ directories: ["corpus", "software", "scripts", "vectors"]
 # Assets that should be downloaded or available in the directory. We're shipping
 # them with the project, so they won't have to be downloaded.
 assets:
-  - dest: "software/fasttext-bloom"
+  - dest: "software/floret"
     git:
-      repo: "https://github.com/adrianeboyd/fastText/"
-      branch: "feature/bloom"
+      repo: "https://github.com/explosion/floret"
+      branch: "master"
       path: ""
   - dest: "software/qvec"
     git:
@@ -38,12 +38,12 @@ assets:
 ## haven't changed, it won't be re-run.
 workflows:
   all:
-    - compile-fasttext
+    - compile-floret
     - tokenize-oscar
     - train-fasttext-standard
-    - train-fasttext-bloom
+    - train-floret
     - init-default-vectors
-    - init-ngram-vectors
+    - init-floret-vectors
     - export-comparable-vectors
     - run-qvec
 
@@ -52,12 +52,12 @@ workflows:
 # via "spacy project run [command] [path]". The help message is optional and
 # shown when executing "spacy project run [optional command] [path] --help".
 commands:
-  - name: "compile-fasttext"
-    help: "Compile fasttext-bloom"
+  - name: "compile-floret"
+    help: "Compile floret"
     script:
-      - "make -j ${vars.n_process} -C software/fasttext-bloom"
+      - "make -j ${vars.n_process} -C software/floret"
     outputs:
-      - "software/fasttext-bloom/fasttext-bloom"
+      - "software/floret/floret"
 
   - name: "tokenize-oscar"
     help: "Download, tokenize, and sentencize data"
@@ -71,23 +71,23 @@ commands:
   - name: "train-fasttext-standard"
     help: "Train fasttext standard vectors (with ngrams)"
     script:
-      - "software/fasttext-bloom/fasttext-bloom cbow -dim ${vars.dim} -minCount ${vars.min_count} -minn ${vars.minn} -maxn ${vars.maxn} -neg 10 -thread ${vars.n_process} -input corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt -output vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10"
+      - "software/floret/floret cbow -dim ${vars.dim} -minCount ${vars.min_count} -minn ${vars.minn} -maxn ${vars.maxn} -neg 10 -thread ${vars.n_process} -input corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt -output vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10"
     deps:
       - "corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt"
     outputs:
       - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.bin"
       - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.vec"
 
-  - name: "train-fasttext-bloom"
-    help: "Train fasttext-bloom vectors"
+  - name: "train-floret"
+    help: "Train floret vectors"
     script:
-      - "software/fasttext-bloom/fasttext-bloom cbow -dim ${vars.dim} -minCount ${vars.min_count} -minn ${vars.minn} -maxn ${vars.maxn} -neg 10 -hashOnly -hashCount ${vars.hash_count} -bucket ${vars.bucket} -thread ${vars.n_process} -input corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt -output vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}"
+      - "software/floret/floret cbow -dim ${vars.dim} -minCount ${vars.min_count} -minn ${vars.minn} -maxn ${vars.maxn} -neg 10 -mode floret -hashCount ${vars.hash_count} -bucket ${vars.bucket} -thread ${vars.n_process} -input corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt -output vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.modeFloret.hashCount${vars.hash_count}.bucket${vars.bucket}"
     deps:
       - "corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt"
     outputs:
-      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}.bin"
-      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}.vec"
-      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}.hashvec"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.modeFloret.hashCount${vars.hash_count}.bucket${vars.bucket}.bin"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.modeFloret.hashCount${vars.hash_count}.bucket${vars.bucket}.vec"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.modeFloret.hashCount${vars.hash_count}.bucket${vars.bucket}.floret"
 
   - name: "init-default-vectors"
     help: "Create an default vectors model"
@@ -98,37 +98,37 @@ commands:
     outputs:
       - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.vec_model"
 
-  - name: "init-ngram-vectors"
+  - name: "init-floret-vectors"
     help: "Create an ngram vectors model"
     script:
-      - "python -m spacy init vectors ${vars.lang} vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}.hashvec vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}.hashvec_model --fasttext-bloom-vectors"
+      - "python -m spacy init vectors ${vars.lang} vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.modeFloret.hashCount${vars.hash_count}.bucket${vars.bucket}.floret vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.modeFloret.hashCount${vars.hash_count}.bucket${vars.bucket}.floret_model --mode floret"
     deps:
-      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}.hashvec"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.modeFloret.hashCount${vars.hash_count}.bucket${vars.bucket}.floret"
     outputs:
-      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}.hashvec_model"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.modeFloret.hashCount${vars.hash_count}.bucket${vars.bucket}.floret_model"
 
   - name: "export-comparable-vectors"
     help: "Export comparable vectors for all qvec eval items"
     script:
       - "python scripts/export_comparable_vectors.py vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.vec vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.vec_model software/qvec/oracles/semcor_noun_verb.supersenses.${vars.lang} vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.vec.qvec"
-      - "python scripts/export_comparable_vectors.py vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}.vec vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}.hashvec_model software/qvec/oracles/semcor_noun_verb.supersenses.${vars.lang} vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}.vec.qvec"
+      - "python scripts/export_comparable_vectors.py vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.modeFloret.hashCount${vars.hash_count}.bucket${vars.bucket}.vec vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.modeFloret.hashCount${vars.hash_count}.bucket${vars.bucket}.floret_model software/qvec/oracles/semcor_noun_verb.supersenses.${vars.lang} vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.modeFloret.hashCount${vars.hash_count}.bucket${vars.bucket}.vec.qvec"
     deps:
       - "scripts/export_comparable_vectors.py"
       - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.vec"
       - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.vec_model"
-      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}.vec"
-      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}.hashvec_model"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.modeFloret.hashCount${vars.hash_count}.bucket${vars.bucket}.vec"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.modeFloret.hashCount${vars.hash_count}.bucket${vars.bucket}.floret_model"
     outputs:
       - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.vec.qvec"
-      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}.vec.qvec"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.modeFloret.hashCount${vars.hash_count}.bucket${vars.bucket}.vec.qvec"
 
   - name: "run-qvec"
     help: "Run qvec"
     script:
       - "python software/qvec/qvec_cca.py --in_vectors vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.vec.qvec --in_oracle software/qvec/oracles/semcor_noun_verb.supersenses.${vars.lang}"
-      - "python software/qvec/qvec_cca.py --in_vectors vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}.vec.qvec --in_oracle software/qvec/oracles/semcor_noun_verb.supersenses.${vars.lang}"
+      - "python software/qvec/qvec_cca.py --in_vectors vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.modeFloret.hashCount${vars.hash_count}.bucket${vars.bucket}.vec.qvec --in_oracle software/qvec/oracles/semcor_noun_verb.supersenses.${vars.lang}"
     deps:
       - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.vec"
       - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.vec.qvec"
-      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}.vec"
-      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.hashOnly.hashCount${vars.hash_count}.bucket${vars.bucket}.vec.qvec"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.modeFloret.hashCount${vars.hash_count}.bucket${vars.bucket}.vec"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim${vars.dim}.minCount${vars.min_count}.n${vars.minn}-${vars.maxn}.neg10.modeFloret.hashCount${vars.hash_count}.bucket${vars.bucket}.vec.qvec"

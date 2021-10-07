@@ -14,7 +14,7 @@ A demo for training and loading `floret` vectors:
 A demo for training and comparing standard `fasttext` and `floret`
 vectors using [`QVEC`](https://github.com/ytsvetko/qvec):
 
-- [`ftb_qvec`](ftb_qvec)
+- [`floret_qvec`](floret_qvec)
 
 Demos for training vectors and and spaCy pipelines with a focus on cases where
 `floret` vectors are expected to improve the performance as compared to
