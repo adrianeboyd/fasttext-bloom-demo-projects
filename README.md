@@ -66,8 +66,8 @@ standard `fasttext` vectors on a fixed vocabulary:
   | standard (pruned)       | 94.9 | 95.0 | 95.0 |
   | floret (minn 5, maxn 6) | 97.1 | 95.9 | 96.5 |
 
-- [`ftb_en_noisy_ner_demo`](ftb_en_noisy_ner_demo): noisy
-  data with English NER for Twitter on emerging events
+- [`floret_en_noisy_ner_demo`](floret_en_noisy_ner_demo): noisy data with
+  English NER for Twitter on emerging events
 
   With 500K (2.5G) tokenized training texts and 20K 300-dim vectors, with
   ~200K unique keys for the standard vectors:
