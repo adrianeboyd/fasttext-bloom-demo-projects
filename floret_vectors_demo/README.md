@@ -1,8 +1,8 @@
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS START (do not remove) -->
 
-# 🪐 spaCy Project: Demo fasttext-bloom vectors
+# 🪐 spaCy Project: Demo floret vectors
 
-Show how to train fasttext-bloom vectors and load them into a spaCy vectors model.
+Show how to train floret vectors and load them into a spaCy vectors model.
 
 ## 📋 project.yml
 
@@ -18,12 +18,11 @@ Commands are only re-run if their inputs have changed.
 
 | Command | Description |
 | --- | --- |
-| `compile-fasttext` | Compile fasttext-bloom |
-| `download-data` | Download data from OSCAR dataset |
-| `preprocess` | Tokenize and sentencize data |
-| `train-fasttext` | Train fasttext-bloom vectors |
+| `compile-floret` | Compile floret |
+| `tokenize-oscar` | Download, tokenize, and sentencize data |
+| `train-floret` | Train floret vectors |
 | `init-ngram-vectors` | Create an ngram vectors model |
-| `fasttext-nn` | Demo fasttext-bloom vectors |
+| `floret-nn` | Demo floret vectors |
 
 ### ⏭ Workflows
 
@@ -34,7 +33,7 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `all` | `compile-fasttext` &rarr; `download-data` &rarr; `preprocess` &rarr; `train-fasttext` &rarr; `init-ngram-vectors` |
+| `all` | `compile-floret` &rarr; `tokenize-oscar` &rarr; `train-floret` &rarr; `init-ngram-vectors` |
 
 ### 🗂 Assets
 
@@ -44,6 +43,6 @@ in the project directory.
 
 | File | Source | Description |
 | --- | --- | --- |
-| `software/fasttext-bloom` | Git |  |
+| `software/floret` | Git |  |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
